@@ -2,14 +2,22 @@
   "name": "thresh",
   "version": "0.1.0",
   "description": "Express reimagining with depencency injection and decorators written in Typescript",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "tsc",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/radbradd/thresh.git"
   },
+  "files": [
+    "build",
+    "LICENSE.md",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "types": "index.d.ts",
   "keywords": [
     "express",
     "di",
@@ -22,5 +30,16 @@
   "bugs": {
     "url": "https://github.com/radbradd/thresh/issues"
   },
-  "homepage": "https://github.com/radbradd/thresh#readme"
+  "homepage": "https://github.com/radbradd/thresh#readme",
+  "dependencies": {
+    "awilix": "^4.2.2",
+    "express": "^4.17.1",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/glob": "^7.1.1",
+    "@types/node": "^12.6.8",
+    "typescript": "^3.5.3"
+  }
 }
