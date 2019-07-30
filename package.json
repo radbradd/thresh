@@ -1,7 +1,7 @@
 {
   "name": "thresh",
-  "version": "0.1.0",
-  "description": "Express reimagining with depencency injection and decorators written in Typescript",
+  "version": "0.1.1",
+  "description": "Decorative implementation of Express with TypeScript and dependency injection",
   "main": "dist/index.js",
   "scripts": {
     "prepare": "tsc",
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/radbradd/thresh.git"
   },
   "files": [
-    "build",
+    "dist",
     "LICENSE.md",
     "README.md",
     "CHANGELOG.md"
