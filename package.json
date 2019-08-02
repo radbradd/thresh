@@ -1,6 +1,6 @@
 {
   "name": "thresh",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Decorative implementation of Express with TypeScript and dependency injection",
   "main": "dist/index.js",
   "scripts": {
