@@ -104,16 +104,16 @@ export function createRoutes(
   app: App,
   Base: { new (...args: any[]): any }
 ) {
-  const routes = Object.getOwnPropertyNames(Base.prototype).map(
-    method => Base.prototype[method]
-  );
-  routes.sort(sort).forEach(route => createRoute(base, app, route));
-
-  function sort(a: AppRoute, b: AppRoute) {
-    if (a.type === b.type) return 0;
-    if (a.type === RouteTypes.Middleware) return -1;
-    return 1;
-  }
+  type OrderBase = { new (...args: any[]): any } & { $order: string[] };
+  const order = (Base as OrderBase).$order || [];
+  Object.getOwnPropertyNames(Base.prototype)
+    .map(m => ({ name: m, i: order.indexOf(m) }))
+    .sort((a, b) => {
+      if (a.i === b.i) return 0;
+      return (a.i === -1 ? 1 : -1) * order.length;
+    })
+    .map(q => Base.prototype[q.name])
+    .forEach(route => createRoute(base, app, route));
 }
 
 function createRoute(base: any, app: App, route: AppRoute) {
