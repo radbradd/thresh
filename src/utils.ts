@@ -1,4 +1,4 @@
-import { asClass, asFunction } from 'awilix';
+import { createContainer, asClass, asFunction } from 'awilix';
 import { MethodTypes, ServiceTypes, RouteTypes } from './enum';
 import {
   App,
@@ -8,6 +8,23 @@ import {
   Injector,
   RouteTypes as RTypes
 } from './types';
+
+export function buildApp(
+  args: any[],
+  services: AppService[]
+): { app: App; services: Injector } {
+  let app, container;
+  if (args.length === 0) {
+    app = require('express')();
+    container = createContainer();
+  }
+  // Router Application
+  else {
+    app = require('express').Router();
+    container = createContainer({}, args[0]);
+  }
+  return { app, services: provideServices(container, services) };
+}
 
 export function buildRoute(
   target: any,
@@ -35,7 +52,7 @@ export function checkInjector(args: any[]) {
   }
 }
 
-export function provideServices(
+function provideServices(
   container: Injector,
   services: AppService[]
 ): Injector {
@@ -82,7 +99,14 @@ export function getConstructorServices(Klass: any, container: Injector) {
   return requested.map((klass: any) => container.cradle[klass.name]);
 }
 
-export function createRoutes(base: any, app: App, routes: AppRoute[]) {
+export function createRoutes(
+  base: any,
+  app: App,
+  Base: { new (...args: any[]): any }
+) {
+  const routes = Object.getOwnPropertyNames(Base.prototype).map(
+    method => Base.prototype[method]
+  );
   routes.sort(sort).forEach(route => createRoute(base, app, route));
 
   function sort(a: AppRoute, b: AppRoute) {
@@ -98,12 +122,10 @@ function createRoute(base: any, app: App, route: AppRoute) {
   switch (+route.type) {
     // Middleware
     case RouteTypes.Middleware:
-      console.log('middle');
       app.use(route.route, route.fn);
       break;
     // Route
     case RouteTypes.Route:
-      console.log('route');
       switch (+route.method) {
         // ALL
         case MethodTypes.All:

@@ -11,7 +11,8 @@ Decorative implementation of Express with TypeScript and dependency injection
   - [Routers](#usage-routers)
   - [Router Scope](#usage-router-scope)
   - [Middleware](#usage-middleware)
-  - [HTTP Methods](#methods)
+  - [HTTP Methods](#usage-methods)
+  - [Hooks](#usage-hooks)
 - [Still in Development](#still-in-dev)
 
 <a name="installation"></a>
@@ -189,7 +190,7 @@ class ThreshApplication {
 new ThreshApplication();
 ```
 
-<a name="methods"></a>
+<a name="usage-methods"></a>
 
 ### HTTP Methods
 
@@ -212,6 +213,46 @@ class ThreshApplication {
   @Method(MethodTypes.POST) // POST: http://localhost:3000/hello
   helloWorld(req: Request, res: Response) {
     res.send(`Hello, ${req.query.name}!`); // Hello, Peter Parker!
+  }
+}
+
+new ThreshApplication();
+```
+
+<a name="usage-hooks"></a>
+
+### Hooks
+
+Several lifecycle hooks are available to modify the App/Router creation.
+
+In Order:
+
+- onInit: Express and Services initialized, but no routes/routers/middleware added yet
+- afterInit: Just after the child Routers, routes and middleware have been added
+- onStart: Just before Express.listen is called, only called on the root application
+- afterStart: Just after Express.listen is called, only called on the root application
+
+```javascript
+import {
+  Thresh,
+  Route,
+  Request,
+  Response,
+  App,
+  Injector,
+  afterInit
+} from 'thresh';
+
+@Thresh({ express: [3000] })
+class ThreshApplication implements afterInit {
+  @Route('/hello')
+  helloWorld(req: Request, res: Response) {
+    res.send(`Hello, world!`);
+  }
+
+  afterInit(app: App, services: Injector) {
+    console.log(app._router.stack); // List all routes
+    app.use('/public', express.static('public')); // Serve public files
   }
 }
 
