@@ -34,9 +34,11 @@ export type AppSettings = {
 
 // Route/Middleware
 export type AppRoute = {
-  fn: AppFunction;
+  fn: AppFunction[];
   type: RouteTypes;
   route: string;
   description: string;
   method: MethodTypes;
 };
+
+export type Route = string | RegExp | Array<string | RegExp>;

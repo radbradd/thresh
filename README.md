@@ -13,6 +13,7 @@ Decorative implementation of Express with TypeScript and dependency injection
   - [Middleware](#usage-middleware)
   - [HTTP Methods](#usage-methods)
   - [Hooks](#usage-hooks)
+  - [Route/Middleware Ordering](#usage-ordering)
 - [Still in Development](#still-in-dev)
 
 <a name="installation"></a>
@@ -39,7 +40,9 @@ yarn add thresh
 
 ### Basic
 
-The most basic implementation with no dependencies or middleware. This is an Express app listening on port 3000 for GET requests on `'/hello'`.
+The most basic implementation with no dependencies or middleware. This is an Express app listening on port 3000 for GET requests on `'/hello'`. As a note `/hello` could
+also be a RegExp, Express path expression or an array containing any combination of
+those.
 
 ```javascript
 import { Thresh, Route, Request, Response } from 'thresh';
@@ -168,22 +171,51 @@ new ThreshApplication();
 
 ### Middleware
 
-Middleware is still in development, and will unfortunately be applied randomly (but before any routes) until fixed.
+Middleware like routes, can also be chained by passing no parameters to the
+class method and returning an array of middleware.
 
 ```javascript
-import { Thresh, Route, Request, Response, NextFunction } from 'thresh';
+import {
+  Thresh,
+  Route,
+  Middleware,
+  Request,
+  Response,
+  NextFunction
+} from 'thresh';
 
 @Thresh({ express: [3000] })
 class ThreshApplication {
   @Middleware('/')
-  addName(req: Request, res: Response, next: NextFunction) {
+  addHero(req: Request, res: Response, next: NextFunction) {
     req.query.name = 'Peter Parker';
     next();
   }
 
+  @Middleware('/villian')
+  addVillian() {
+    // ^-- No Parameters
+    return [
+      function(req: Request, res: Response, next: NextFunction) {
+        console.log(`You're done ${req.query.name}!`);
+        next();
+      },
+      function(req: Request, res: Response, next: NextFunction) {
+        req.query.name = 'Doctor Octavius';
+        next();
+      }
+    ];
+  }
+
   @Route('/hello')
-  helloWorld(req: Request, res: Response) {
+  hello(req: Request, res: Response) {
     res.send(`Hello, ${req.query.name}!`); // Hello, Peter Parker!
+  }
+
+  @Route('/villian')
+  getVillian(req: Request, res: Response) {
+    res.send(`Oh no, it's ${req.query.name}!`);
+    // Oh no, it's Doctor Octavius
   }
 }
 
@@ -194,7 +226,9 @@ new ThreshApplication();
 
 ### HTTP Methods
 
-GET, POST, and ALL are currently allowed. Other needed methods are in development
+All HTTP verbs that Express supports, Thresh does as well. They can either be typed out
+as a string or imported by the `MethodTypes` constant. If `@Method` is not defined, the
+route will default to `GET`.
 
 ```javascript
 import {
@@ -210,9 +244,15 @@ import {
 @Thresh({ express: [3000] })
 class ThreshApplication {
   @Route('/hello')
-  @Method(MethodTypes.POST) // POST: http://localhost:3000/hello
+  @Method(MethodTypes.Post) // POST: http://localhost:3000/hello
   helloWorld(req: Request, res: Response) {
-    res.send(`Hello, ${req.query.name}!`); // Hello, Peter Parker!
+    res.send(`Hello, world!`); // Hello, world!
+  }
+
+  @Route('/helloall')
+  @Method('put') // PUT: http://localhost:3000/helloall
+  helloAll(req: Request, res: Response) {
+    res.send(`Hello, everyone!`); // Hello, everyone!
   }
 }
 
@@ -259,12 +299,51 @@ class ThreshApplication implements afterInit {
 new ThreshApplication();
 ```
 
+<a name="usage-ordering"></a>
+
+### Route/Middleware Ordering
+
+If compiled to ES2015+ (ES6+) Routes and Middleware are applied exactly
+how they appear in the class from top to bottom. Compiling further back
+than that doesn't guarantee object property ordering
+**[ECMA-262](https://www.ecma-international.org/ecma-262/6.0/#sec-object.getownpropertynames)**.
+To overcome this a `static $order: string[]` can be provided with the exact
+order to apply routes/middleware in. Any `@Routes` or `@Middleware` not declared
+in `$order` will be applied after those in `$order`.
+
+```javascript
+import { Thresh, Route, Request, Response, NextFunction } from 'thresh';
+
+@Thresh({ express: [3000] })
+class ThreshApplication implements afterInit {
+  static $order = ['appliedFirst', 'appliedLast'];
+
+  @Route('/hello')
+  appliedLast(req: Request, res: Response) {
+    res.send(`Hello, ${req.query.name}!`);
+    // With $order: Hello, Peter Parker!
+    // Without $order: Hello, undefined
+    //    This is because appliedLast is applied first as
+    //    it comes first in the class definition
+  }
+
+  @Middleware('/')
+  appliedFirst(req: Request, res: Response, next: NextFunction) {
+    req.query.name = 'Peter Parker';
+    next();
+  }
+}
+
+new ThreshApplication();
+```
+
 <a name="still-in-dev"></a>
 
 # Still in Development
 
-- Middleware and Route ordering
-- More Http Methods
+- App/Router.param
+- App settings
+- Flatten Middleware
 - Providing Services within Services
 - Error handling
 - Tests

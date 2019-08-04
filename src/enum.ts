@@ -9,7 +9,28 @@ export enum RouteTypes {
 }
 
 export enum MethodTypes {
-  Get = 1,
-  Post,
-  All
+  Checkout = 'checkout',
+  Copy = 'copy',
+  Delete = 'delete',
+  Get = 'get',
+  Head = 'head',
+  Lock = 'lock',
+  Merge = 'merge',
+  Mkactivity = 'mkactivity',
+  Mkcol = 'mkcol',
+  Move = 'move',
+  MSearch = 'm-search',
+  Notify = 'notify',
+  Options = 'options',
+  Patch = 'patch',
+  Post = 'post',
+  Purge = 'purge',
+  Put = 'put',
+  Report = 'report',
+  Search = 'search',
+  Subscribe = 'subscribe',
+  Trace = 'trace',
+  Unlock = 'unlock',
+  Unsubscribe = 'unsubscribe',
+  All = 'all'
 }

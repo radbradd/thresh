@@ -6,7 +6,8 @@ import {
   AppRouter,
   AppService,
   Injector,
-  RouteTypes as RTypes
+  RouteTypes as RTypes,
+  Route
 } from './types';
 
 export function buildApp(
@@ -29,10 +30,13 @@ export function buildApp(
 export function buildRoute(
   target: any,
   method: string,
-  route: string,
-  type: RTypes
+  route: Route,
+  type: RTypes,
+  inner: boolean = false
 ): any {
-  const fn = target[method];
+  let fn = target[method];
+  if (inner) fn = fn();
+  if (!Array.isArray(fn)) fn = [fn];
   target[method] = Object.assign(
     {
       fn: fn,
@@ -110,15 +114,18 @@ export function createRoutes(
     .map(m => ({ name: m, i: order.indexOf(m) }))
     .sort((a, b) => {
       if (a.i === b.i) return 0;
-      return (a.i === -1 ? 1 : -1) * order.length;
+      return (b.i === -1 ? -1 : 1) * order.length;
     })
-    .map(q => Base.prototype[q.name])
+    .map(q => {
+      console.log(q.name);
+      return Base.prototype[q.name];
+    })
     .forEach(route => createRoute(base, app, route));
 }
 
 function createRoute(base: any, app: App, route: AppRoute) {
   if (!isAppRoute(route)) return {};
-  route.fn = route.fn.bind(base);
+  route.fn = route.fn.map(fn => fn.bind(base));
   switch (+route.type) {
     // Middleware
     case RouteTypes.Middleware:
@@ -126,20 +133,8 @@ function createRoute(base: any, app: App, route: AppRoute) {
       break;
     // Route
     case RouteTypes.Route:
-      switch (+route.method) {
-        // ALL
-        case MethodTypes.All:
-          app.all(route.route, route.fn);
-          break;
-        // POST
-        case MethodTypes.Post:
-          app.post(route.route, route.fn);
-          break;
-        // GET
-        case MethodTypes.Get:
-        default:
-          app.get(route.route, route.fn);
-      }
+      app[route.method](route.route, route.fn);
+      break;
   }
 
   function isAppRoute(route: AppRoute) {
