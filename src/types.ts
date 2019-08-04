@@ -8,7 +8,7 @@ import {
 
 // Enums
 export type ServiceTypes = Service.Class | Service.Function;
-export type RouteTypes = Route.Middleware | Route.Route;
+export type RouteTypes = Route.Middleware | Route.Route | Route.Param;
 export type MethodTypes = Method.Get | Method.Post;
 
 // Aliases
@@ -21,7 +21,8 @@ export type Constructor<T> = new (...args: any[]) => T;
 export type AppFunction = (
   req: Request,
   res: Response,
-  next?: NextFunction
+  next?: NextFunction,
+  id?: string
 ) => any;
 export type AppService = Function | [ServiceTypes, any];
 export type AppRouter = [string, { new (services: AwilixContainer): any }];

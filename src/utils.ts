@@ -135,6 +135,10 @@ function createRoute(base: any, app: App, route: AppRoute) {
     case RouteTypes.Route:
       app[route.method](route.route, route.fn);
       break;
+    // Param
+    case RouteTypes.Param:
+      app.param(route.route, route.fn[0]);
+      break;
   }
 
   function isAppRoute(route: AppRoute) {

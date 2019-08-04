@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.1.5
+
+- Added app.params as `@Param`
+
 ### v0.1.4
 
 - Added all Http verbs that Express supports

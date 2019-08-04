@@ -5,7 +5,8 @@ export enum ServiceTypes {
 
 export enum RouteTypes {
   Route = 1,
-  Middleware
+  Middleware,
+  Param
 }
 
 export enum MethodTypes {

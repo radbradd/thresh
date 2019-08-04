@@ -11,6 +11,7 @@ Decorative implementation of Express with TypeScript and dependency injection
   - [Routers](#usage-routers)
   - [Router Scope](#usage-router-scope)
   - [Middleware](#usage-middleware)
+  - [Params](#usage-params)
   - [HTTP Methods](#usage-methods)
   - [Hooks](#usage-hooks)
   - [Route/Middleware Ordering](#usage-ordering)
@@ -62,7 +63,7 @@ new ThreshApplication();
 
 ### Services
 
-Services are created as singletons and are available are provided for in the decorator `@Thresh`. They are immediately available in the constructor of the class that provided them, as well as the constructor of all nested routers.
+Services are created as singletons and are available and provided for in the decorator `@Thresh`. They are immediately available in the constructor of the class that provided them, as well as the constructor of all nested routers.
 
 ```javascript
 import { Thresh, Route, Request, Response } from 'thresh';
@@ -216,6 +217,33 @@ class ThreshApplication {
   getVillian(req: Request, res: Response) {
     res.send(`Oh no, it's ${req.query.name}!`);
     // Oh no, it's Doctor Octavius
+  }
+}
+
+new ThreshApplication();
+```
+
+<a name="usage-params"></a>
+
+# Params
+
+Parameter interceptors are assigned via the `@Param` decorator. Pass in a
+string with the parameter you want to intercept and act on.
+
+```javascript
+import { Thresh, Route, Param, Request, Response, NextFunction } from 'thresh';
+
+@Thresh({ express: [3000] })
+class ThreshApplication {
+  @Param('name')
+  addName(req: Request, res: Response, next: NextFunction, name: any) {
+    req.params.name = name + 'awesome';
+    next();
+  }
+
+  @Route('/hello/:name')
+  hello(req: Request, res: Response) {
+    res.send(`Hello, ${req.params.name}!`); //Hello [name]awesome!
   }
 }
 
