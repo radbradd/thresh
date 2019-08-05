@@ -1,6 +1,8 @@
 # Thresh
 
-[![npm version](https://badge.fury.io/js/thresh.svg)](https://badge.fury.io/js/thresh)
+[![NPM Version](https://badge.fury.io/js/thresh.svg)](https://badge.fury.io/js/thresh)
+[![Coverage Status](https://coveralls.io/repos/github/radbradd/thresh/badge.svg)](https://coveralls.io/github/radbradd/thresh)
+[![Build Status](https://travis-ci.org/radbradd/thresh.svg?branch=master)](https://travis-ci.org/radbradd/thresh)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
 Decorative implementation of Express with TypeScript and dependency injection
@@ -372,9 +374,5 @@ new ThreshApplication();
 
 # Still in Development
 
-- App/Router.param
 - App settings
-- Flatten Middleware
 - Providing Services within Services
-- Error handling
-- Tests
