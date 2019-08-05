@@ -1,5 +1,8 @@
 # Thresh
 
+[![npm version](https://badge.fury.io/js/thresh.svg)](https://badge.fury.io/js/thresh)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+
 Decorative implementation of Express with TypeScript and dependency injection
 
 # Table of Contents
@@ -237,13 +240,13 @@ import { Thresh, Route, Param, Request, Response, NextFunction } from 'thresh';
 class ThreshApplication {
   @Param('name')
   addName(req: Request, res: Response, next: NextFunction, name: any) {
-    req.params.name = name + 'awesome';
+    req.query.name = name + 'awesome';
     next();
   }
 
   @Route('/hello/:name')
   hello(req: Request, res: Response) {
-    res.send(`Hello, ${req.params.name}!`); //Hello [name]awesome!
+    res.send(`Hello, ${req.query.name}!`); //Hello [name]awesome!
   }
 }
 

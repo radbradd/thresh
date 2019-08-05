@@ -1,5 +1,10 @@
 # Changelog
 
+### v0.1.6
+
+- Added 100% test coverage
+- Added app.param interceptors
+
 ### v0.1.5
 
 - Added app.params as `@Param`

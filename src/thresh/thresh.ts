@@ -50,6 +50,7 @@ export function Thresh(config: AppSettings = defaultConfig) {
     return class __Thresh extends Base {
       __app: App;
       __services: Injector;
+      __server: any | null;
 
       constructor(...args: any[]) {
         const { app, services } = buildApp(args, config.services!);
@@ -58,6 +59,7 @@ export function Thresh(config: AppSettings = defaultConfig) {
         super(...getConstructorServices(__Thresh, services));
         this.__app = app;
         this.__services = services;
+        this.__server = null;
 
         // Fire off that constructor has been set up
         this.__fireEvent('onInit', app, services);
@@ -76,7 +78,7 @@ export function Thresh(config: AppSettings = defaultConfig) {
           // Fire off that app is starting
           this.__fireEvent('onStart', app, services);
           const [port, cb] = config.express;
-          (app as ExpressApplication).listen(port, () => {
+          this.__server = (app as ExpressApplication).listen(port, () => {
             // Fire off that app has started
             this.__fireEvent('afterStart', app, services);
           });
@@ -88,6 +90,10 @@ export function Thresh(config: AppSettings = defaultConfig) {
           // @ts-ignore
           super[event](app, services);
         } catch {}
+      }
+
+      __close() {
+        this.__server!.close();
       }
     };
   };
