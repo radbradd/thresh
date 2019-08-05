@@ -48,7 +48,7 @@ describe('thresh.ts', () => {
         });
       }
     }
-    new Foo();
+    const foo = new Foo();
 
     it('should return the secret message', done => {
       chai
@@ -59,6 +59,8 @@ describe('thresh.ts', () => {
           expect(err).to.be.null;
           expect(res).to.have.status(200);
           expect(res.text).to.equal(secret);
+          // @ts-ignore
+          foo.__close();
           done();
         });
     });
@@ -224,7 +226,7 @@ describe('thresh.ts', () => {
       const foo = new Foo();
       createRoutes(foo, app, Foo);
       // @ts-ignore
-      app.listen(3002);
+      const server = app.listen(3002);
       chai
         .request('http://localhost:3002')
         .get('/hello')
@@ -233,6 +235,7 @@ describe('thresh.ts', () => {
           expect(err).to.be.null;
           expect(res).to.have.status(200);
           expect(res.text).to.equal('x00hello');
+          server.close();
           done();
         });
     });
