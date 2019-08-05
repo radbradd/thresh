@@ -145,3 +145,18 @@ function createRoute(base: any, app: App, route: AppRoute) {
     return route.type && route.method && route.route && route.fn;
   }
 }
+
+export function validateRoute(route: Route) {
+  if (strOrRegExp(route)) return true;
+  if (!Array.isArray(route)) return false;
+  route.reduce((p, c) => {
+    if (!p) return false;
+    return strOrRegExp(c);
+  }, true);
+
+  function strOrRegExp(v: any) {
+    if (typeof route === 'string') return true;
+    if (route.constructor === RegExp) return true;
+    return false;
+  }
+}
