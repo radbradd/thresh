@@ -1,6 +1,6 @@
 # Thresh
 
-[![NPM Version](https://badge.fury.io/js/thresh.svg)](https://badge.fury.io/js/thresh)
+[![npm version](http://img.shields.io/npm/v/thresh.svg?style=flat)](https://npmjs.org/package/thresh 'View this project on npm')
 [![Coverage Status](https://coveralls.io/repos/github/radbradd/thresh/badge.svg)](https://coveralls.io/github/radbradd/thresh)
 [![Build Status](https://travis-ci.org/radbradd/thresh.svg?branch=master)](https://travis-ci.org/radbradd/thresh)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
