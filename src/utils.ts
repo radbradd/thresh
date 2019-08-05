@@ -27,29 +27,6 @@ export function buildApp(
   return { app, services: provideServices(container, services) };
 }
 
-export function buildRoute(
-  target: any,
-  method: string,
-  route: Route,
-  type: RTypes,
-  inner: boolean = false
-): any {
-  let fn = target[method];
-  if (inner) fn = fn();
-  if (!Array.isArray(fn)) fn = [fn];
-  target[method] = Object.assign(
-    {
-      fn: fn,
-      type: type,
-      route: route,
-      description: '',
-      method: MethodTypes.Get
-    },
-    fn
-  );
-  return target;
-}
-
 export function checkInjector(args: any[]) {
   if (args.length !== 1 || !args[0].cradle) {
     throw Error('Injector not found');
@@ -143,20 +120,5 @@ function createRoute(base: any, app: App, route: AppRoute) {
 
   function isAppRoute(route: AppRoute) {
     return route.type && route.method && route.route && route.fn;
-  }
-}
-
-export function validateRoute(route: Route) {
-  if (strOrRegExp(route)) return true;
-  if (!Array.isArray(route)) return false;
-  route.reduce((p, c) => {
-    if (!p) return false;
-    return strOrRegExp(c);
-  }, true);
-
-  function strOrRegExp(v: any) {
-    if (typeof route === 'string') return true;
-    if (route.constructor === RegExp) return true;
-    return false;
   }
 }

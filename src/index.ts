@@ -2,8 +2,6 @@ import 'reflect-metadata';
 
 export * from './thresh';
 export * from './route';
-export * from './middleware';
-export * from './param';
 export * from './method';
 export * from './description';
 export * from './enum';
