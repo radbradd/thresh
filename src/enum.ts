@@ -1,8 +1,3 @@
-export enum ServiceTypes {
-  Function = 1,
-  Class
-}
-
 export enum RouteTypes {
   Route = 1,
   Middleware,
@@ -42,4 +37,6 @@ export enum ErrorTypes {
   MiddlewareArgs = '@Middleware method should either be a middleware function or return an array of middleware functions',
   RoutePath = '@Route requires a single argument of type: string | RegExp | Array<string|RegExp>',
   RouteArgs = '@Route method should either be a route function or return an array of route/middleware functions',
+  MustBeClass = '@Thresh.services must be ES6 classes defined as `class Foo {}`',
+  RouterConfig = '@Thresh.routers must be of type Array<[string, @Thresh]>'
 }

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 
-export * from './thresh';
-export * from './route';
-export * from './method';
-export * from './description';
+export * from './thresh/thresh';
+export * from './methods/route';
+export * from './methods/method';
+export * from './methods/description';
 export * from './enum';
 
 // Types

@@ -1,4 +1,4 @@
-import { MethodTypes, ErrorTypes } from './enum';
+import { MethodTypes, ErrorTypes } from '../enum';
 
 export function Method(http: string) {
   if (!Object.values(MethodTypes).includes(http)) {

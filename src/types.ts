@@ -1,13 +1,8 @@
 import { AwilixContainer } from 'awilix';
 import { Request, Response, NextFunction, Application, Router } from 'express';
-import {
-  ServiceTypes as Service,
-  RouteTypes as Route,
-  MethodTypes as Method
-} from './enum';
+import { RouteTypes as Route, MethodTypes as Method } from './enum';
 
 // Enums
-export type ServiceTypes = Service.Class | Service.Function;
 export type RouteTypes = Route.Middleware | Route.Route | Route.Param;
 export type MethodTypes = Method.Get | Method.Post;
 
@@ -24,7 +19,7 @@ export type AppFunction = (
   next?: NextFunction,
   id?: string
 ) => any;
-export type AppService = Function | [ServiceTypes, any];
+export type AppService = any;
 export type AppRouter = [string, { new (services: AwilixContainer): any }];
 
 export type AppSettings = {

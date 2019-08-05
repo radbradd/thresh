@@ -1,50 +1,10 @@
-import { RouteTypes, ErrorTypes, MethodTypes } from './enum';
-import { Route, RouteTypes as RTypes } from './types';
-
-export function Route(route: Route) {
-  return build(
-    route,
-    RouteTypes.Route,
-    (r: Route) => {
-      if (!validateRoute(r)) {
-        throw Error(ErrorTypes.RoutePath);
-      }
-    },
-    (m: any[]) => {
-      if (!isMiddlewareFunction(m)) {
-        throw Error(ErrorTypes.RouteArgs);
-      }
-    }
-  );
-}
-
-export function Middleware(route: Route) {
-  return build(
-    route,
-    RouteTypes.Middleware,
-    (r: Route) => {
-      if (!validateRoute(r)) {
-        throw Error(ErrorTypes.MiddlewarePath);
-      }
-    },
-    (m: any[]) => {
-      if (!isMiddlewareFunction(m)) {
-        throw Error(ErrorTypes.MiddlewareArgs);
-      }
-    }
-  );
-}
-
-export function Param(param: string) {
-  return function(target: any, method: string) {
-    return buildRoute(target, method, param, RouteTypes.Param);
-  };
-}
+import { MethodTypes } from '../enum';
+import { Route, RouteTypes as RTypes } from '../types';
 
 type CheckPath = (path: Route) => void;
 type CheckArgs = (metadata: any[]) => void;
 
-function build(
+export function build(
   route: Route,
   type: RTypes,
   checkPath: CheckPath,
@@ -58,7 +18,7 @@ function build(
   };
 }
 
-function validateRoute(route: Route) {
+export function validateRoute(route: Route) {
   if (strOrRegExp(route)) return true;
   if (!Array.isArray(route)) return false;
   return route.reduce((p, c) => {
@@ -73,11 +33,11 @@ function strOrRegExp(v: any) {
   return false;
 }
 
-function isMiddlewareFunction(metadata: any[]) {
+export function isMiddlewareFunction(metadata: any[]) {
   return metadata.length <= 3;
 }
 
-function buildRoute(
+export function buildRoute(
   target: any,
   method: string,
   route: Route,

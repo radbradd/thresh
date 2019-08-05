@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Method } from './method';
-import { MethodTypes, ErrorTypes } from './enum';
+import { MethodTypes, ErrorTypes } from '../enum';
 
 describe('method.ts', () => {
   it('should have method property', () => {

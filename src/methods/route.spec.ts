@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { Request, Response, NextFunction, Route, Param, Middleware } from './';
-import { MethodTypes, RouteTypes, ErrorTypes } from './enum';
+import { Request, Response, NextFunction, Route, Param, Middleware } from '..';
+import { MethodTypes, RouteTypes, ErrorTypes } from '../enum';
 
 describe('route.ts', () => {
   describe('@Route', () => {
