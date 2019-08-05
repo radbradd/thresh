@@ -1,14 +1,6 @@
-import { createContainer, asClass, asFunction } from 'awilix';
-import { MethodTypes, ServiceTypes, RouteTypes } from './enum';
-import {
-  App,
-  AppRoute,
-  AppRouter,
-  AppService,
-  Injector,
-  RouteTypes as RTypes,
-  Route
-} from './types';
+import { createContainer, asClass } from 'awilix';
+import { RouteTypes, ErrorTypes } from '../enum';
+import { App, AppRoute, AppRouter, AppService, Injector } from '../types';
 
 export function buildApp(
   args: any[],
@@ -27,59 +19,24 @@ export function buildApp(
   return { app, services: provideServices(container, services) };
 }
 
-export function buildRoute(
-  target: any,
-  method: string,
-  route: Route,
-  type: RTypes,
-  inner: boolean = false
-): any {
-  let fn = target[method];
-  if (inner) fn = fn();
-  if (!Array.isArray(fn)) fn = [fn];
-  target[method] = Object.assign(
-    {
-      fn: fn,
-      type: type,
-      route: route,
-      description: '',
-      method: MethodTypes.Get
-    },
-    fn
-  );
-  return target;
-}
-
-export function checkInjector(args: any[]) {
-  if (args.length !== 1 || !args[0].cradle) {
-    throw Error('Injector not found');
-  }
-}
-
 function provideServices(
   container: Injector,
   services: AppService[]
 ): Injector {
   services.forEach(service => {
-    if (!Array.isArray(service)) {
-      if (service.prototype.constructor) {
-        service = [ServiceTypes.Class, service];
-      } else {
-        service = [ServiceTypes.Function, service];
-      }
+    if (!isClass(service)) {
+      throw Error(ErrorTypes.MustBeClass);
     }
-    switch (service[0]) {
-      case ServiceTypes.Class:
-        container.register(service[1].name, asClass(service[1]).singleton());
-        break;
-      case ServiceTypes.Function:
-        container.register(service[1].name, asFunction(service[1]).singleton());
-        break;
-      default:
-        throw Error(`Unable to register ${service[1].name} as a ${service[0]}`);
-    }
+    container.register(service.name, asClass(service).scoped());
   });
   return container;
+
+  function isClass(func: any) {
+    return (
+      typeof func === 'function' &&
+      /^class\s/.test(Function.prototype.toString.call(func))
+    );
+  }
 }
 
 export function provideRouters(
@@ -88,8 +45,8 @@ export function provideRouters(
   routers: Array<AppRouter>
 ) {
   routers.forEach(routerObj => {
-    if (routerObj.length !== 2) {
-      throw Error(`Invalid router configuration`);
+    if (routerObj.length !== 2 || typeof routerObj[0] !== 'string') {
+      throw Error(ErrorTypes.RouterConfig);
     }
     const [path, router] = routerObj;
     const r = new router(services);
@@ -100,7 +57,14 @@ export function provideRouters(
 export function getConstructorServices(Klass: any, container: Injector) {
   const constructor = Klass.prototype.constructor;
   const requested = Reflect.getMetadata('design:paramtypes', constructor) || [];
-  return requested.map((klass: any) => container.cradle[klass.name]);
+  return requested.map((klass: any) => {
+    try {
+      return container.cradle[klass.name];
+      // Consider throwing own error here
+    } catch (AwilixResolutionError) {
+      return undefined;
+    }
+  });
 }
 
 export function createRoutes(
@@ -112,12 +76,12 @@ export function createRoutes(
   const order = (Base as OrderBase).$order || [];
   Object.getOwnPropertyNames(Base.prototype)
     .map(m => ({ name: m, i: order.indexOf(m) }))
+    .filter(m => m.name !== 'constructor')
     .sort((a, b) => {
       if (a.i === b.i) return 0;
       return (b.i === -1 ? -1 : 1) * order.length;
     })
     .map(q => {
-      console.log(q.name);
       return Base.prototype[q.name];
     })
     .forEach(route => createRoute(base, app, route));

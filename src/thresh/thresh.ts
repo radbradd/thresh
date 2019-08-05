@@ -1,11 +1,11 @@
 import { Application as ExpressApplication } from 'express';
-import { App, AppSettings, Constructor, Injector } from './types';
+import { App, AppSettings, Constructor, Injector } from '../types';
 import {
   buildApp,
   createRoutes,
   provideRouters,
   getConstructorServices
-} from './utils';
+} from './functions';
 
 const defaultConfig: AppSettings = {
   routers: [],
@@ -76,13 +76,10 @@ export function Thresh(config: AppSettings = defaultConfig) {
           // Fire off that app is starting
           this.__fireEvent('onStart', app, services);
           const [port, cb] = config.express;
-          if (app.hasOwnProperty('listen')) {
-            (app as ExpressApplication).listen(port, () => {
-              if (cb) cb(port);
-              // Fire off that app has started
-              this.__fireEvent('afterStart', app, services);
-            });
-          }
+          (app as ExpressApplication).listen(port, () => {
+            // Fire off that app has started
+            this.__fireEvent('afterStart', app, services);
+          });
         }
       }
 
