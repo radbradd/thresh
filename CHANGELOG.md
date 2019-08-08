@@ -1,5 +1,10 @@
 # Changelog
 
+### v1.1.0
+
+- Added RootService and ExpressService
+- Restructured tests for consistency
+
 ### v0.1.6
 
 - Added 100% test coverage

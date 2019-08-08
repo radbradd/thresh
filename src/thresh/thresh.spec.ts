@@ -3,241 +3,195 @@ import chai, { expect } from 'chai';
 import chaiHttp from 'chai-http';
 chai.use(chaiHttp);
 
-import { createContainer, asClass } from 'awilix';
-
-import { Thresh, onStart } from './thresh';
 import {
-  buildApp,
-  provideRouters,
-  getConstructorServices,
-  createRoutes
-} from './functions';
-import { ErrorTypes } from '../enum';
-import { Constructor, App, Injector } from '../types';
-import { Request, Response, NextFunction } from '../';
-import { Route, Param, Middleware } from '../methods/route';
+  Thresh,
+  Route,
+  Middleware,
+  Param,
+  RootService,
+  ExpressService,
+  afterStart,
+  afterInit,
+  startThresh,
+  Request,
+  Response,
+  NextFunction
+} from '../';
 
-const world = 'world';
+// Main Tester
 class FooService {
-  public hello: string = world;
+  hello: string = 'world';
 }
 
-const bar = 'world';
 class BarService {
-  public bar: string = bar;
+  bar: boolean = true;
 }
 
-function Injectable() {
-  return function _Injectable<T extends Constructor<{}>>(Base: T) {
-    return class __Injectable extends Base {};
-  };
+@Thresh({
+  services: [FooService]
+})
+class ThreshRouter {
+  constructor(
+    public expressService: ExpressService,
+    public rootService: RootService,
+    public fooService: FooService
+  ) {}
 }
 
-describe('thresh.ts', () => {
-  describe('@Thresh', () => {
-    const secret = 'agentman';
+@Thresh({
+  services: [FooService],
+  routers: [['/thresh', ThreshRouter]],
+  express: [3000]
+})
+class ThreshApp implements afterStart, afterInit {
+  constructor(
+    public rootService: RootService,
+    public fooService: FooService,
+    public barService: BarService
+  ) {}
 
-    @Thresh({
-      services: [FooService, BarService],
-      express: [3003]
-    })
-    class Foo implements onStart {
-      onStart(app: App) {
-        app.get('/secret', (req: Request, res: Response) => {
-          res.send(secret);
-        });
-      }
-    }
-    const foo = new Foo();
+  static $order = ['modId', 'addId'];
 
-    it('should return the secret message', done => {
-      chai
-        .request('http://localhost:3003')
-        .get('/secret')
-        .send()
-        .end((err, res) => {
-          expect(err).to.be.null;
-          expect(res).to.have.status(200);
-          expect(res.text).to.equal(secret);
-          // @ts-ignore
-          foo.__close();
-          done();
-        });
+  afterInit() {}
+
+  afterStart() {
+    // For code coverage, should do nothing
+    this.rootService.routers = [['', class {}]];
+    this.rootService.routes = { klassInstance: this, Klass: ThreshApp };
+  }
+
+  @Middleware('/:id')
+  addId(req: Request, res: Response, next: NextFunction) {
+    req.query.id = 'x' + req.query.id;
+    next();
+  }
+
+  @Route('/:id')
+  getId(req: Request, res: Response) {
+    res.send(req.query.id);
+  }
+
+  @Route('/:id/hello')
+  helloId(req: Request, res: Response) {
+    res.json({ hello: 'world', id: req.query.id });
+  }
+
+  @Param('id')
+  modId(req: Request, res: Response, next: NextFunction, id: string) {
+    req.query.id = '00' + id;
+    next();
+  }
+}
+
+describe('@Thresh', () => {
+  let app: ThreshApp;
+  let router: ThreshRouter;
+
+  before(() => {
+    // @ts-ignore
+    app = startThresh(ThreshApp);
+    // @ts-ignore
+    router = app.rootService.routers[0];
+  });
+
+  after(done => {
+    app.rootService
+      .close()
+      .catch()
+      .finally(done);
+  });
+
+  describe('@Thresh.Application', () => {
+    it('root app should be an Express Application', () => {
+      expect(app.rootService.isApp).to.equal(true);
+    });
+
+    it('should have args that match constructor', () => {
+      expect(app.rootService.args).to.eql([
+        app.rootService,
+        app.fooService,
+        app.barService
+      ]);
+    });
+
+    it('should close without error', () => {
+      return new Promise(resolve => {
+        app.rootService
+          .close()
+          .then(() => {
+            expect(true).to.equal(true);
+          })
+          .catch((err: any) => {
+            expect(true).to.equal(false);
+          })
+          .finally(resolve);
+      });
+    });
+
+    it('should reject closing a closed app', () => {
+      return new Promise(resolve => {
+        app.rootService
+          .close()
+          .then(() => {
+            expect(true).to.equal(false);
+          })
+          .catch((err: any) => {
+            expect(true).to.equal(true);
+          })
+          .finally(resolve);
+      });
+    });
+
+    it('should start without error', () => {
+      return new Promise(resolve => {
+        app.rootService
+          .listen(3000)
+          .then(() => {
+            expect(true).to.equal(true);
+          })
+          .catch((err: any) => {
+            console.error(err);
+            expect(true).to.equal(false);
+          })
+          .finally(resolve);
+      });
+    });
+
+    it('should reject starting a running app', () => {
+      return new Promise(resolve => {
+        app.rootService
+          .listen(3000)
+          .then(() => {
+            expect(true).to.equal(false);
+          })
+          .catch((err: any) => {
+            expect(true).to.equal(true);
+          })
+          .finally(resolve);
+      });
     });
   });
 
-  describe('fn: buildApp', () => {
-    it('should create Express.App with no args passed', () => {
-      const obj = buildApp([], []);
-      expect(obj.app).to.haveOwnProperty('listen');
-      expect(obj.services).to.haveOwnProperty('cradle');
+  describe('@Thresh.Router', () => {
+    it('routers should be Express Routers', () => {
+      expect(router.expressService.isApp).to.equal(false);
     });
 
-    it('should create Express.Router if any args passed', () => {
-      const container = createContainer();
-      const obj = buildApp([container], []);
-      expect(obj.app).to.not.haveOwnProperty('listen');
-      expect(obj.services).to.haveOwnProperty('cradle');
+    it('routers should have access to RootService', () => {
+      expect(router.rootService).to.equal(app.rootService);
     });
 
-    it('should add services to new container with no args passed', () => {
-      const obj = buildApp([], [FooService]);
-      expect(obj.app).to.haveOwnProperty('listen');
-      expect(obj.services).to.haveOwnProperty('cradle');
-      expect(obj.services.cradle.FooService.hello).to.equal(world);
+    it('routers services should scope if provided in router', () => {
+      expect(router.expressService).to.not.equal(router.rootService);
+      expect(router.fooService).to.not.equal(app.fooService);
     });
 
-    it('should add services to existing container if any args passed', () => {
-      const container = createContainer();
-      container.register('FooService', asClass(FooService).singleton());
-      const obj = buildApp([container], [BarService]);
-      expect(obj.app).to.not.haveOwnProperty('listen');
-      expect(obj.services).to.haveOwnProperty('cradle');
-      expect(obj.services.cradle.FooService.hello).to.equal(world);
-      expect(obj.services.cradle.BarService.bar).to.equal(bar);
-    });
-
-    it('should override services if a new service of same type is provided', () => {
-      // Initial Container
-      const container = createContainer();
-      container.register('FooService', asClass(FooService).singleton());
-      container.cradle.FooService.hello = 'you';
-
-      // New Container
-      const obj = buildApp([container], [FooService]);
-      expect(obj.app).to.not.haveOwnProperty('listen');
-      expect(obj.services).to.haveOwnProperty('cradle');
-      expect(obj.services.cradle.FooService.hello).to.not.equal(
-        container.cradle.FooService.hello
-      );
-    });
-
-    it('should throw error if class is not passed', () => {
-      const test = () => {
-        return buildApp([], [function fn() {}]);
-      };
-      expect(test).to.throw(Error, ErrorTypes.MustBeClass);
-    });
-  });
-
-  describe('fn: getConstructorServices', () => {
-    it('should return Classes for arguments in constructor', () => {
-      @Injectable()
-      class Foo {
-        constructor(fooService: FooService, barService: BarService) {}
-      }
-
-      const container = createContainer();
-      container.register(FooService.name, asClass(FooService));
-      container.register(BarService.name, asClass(BarService));
-
-      const services = getConstructorServices(Foo, container);
-
-      expect(services.length).to.equal(2);
-      expect(services[0].hello).to.equal(world);
-      expect(services[1].bar).to.equal(bar);
-    });
-
-    it('should return undefined for unprovided services', () => {
-      @Injectable()
-      class Foo {
-        constructor(fooService: FooService, barService: BarService) {}
-      }
-
-      const container = createContainer();
-      container.register(FooService.name, asClass(FooService));
-      // container.register(BarService.name, asClass(BarService));
-
-      const services = getConstructorServices(Foo, container);
-
-      expect(services.length).to.equal(2);
-      expect(services[0].hello).to.equal(world);
-      expect(services[1]).to.equal(undefined);
-      expect(() => services[1].bar).to.throw(TypeError);
-    });
-
-    it('should return empty array if no arguments', () => {
-      @Injectable()
-      class Foo {
-        constructor() {}
-      }
-
-      const container = createContainer();
-      container.register(FooService.name, asClass(FooService));
-      container.register(BarService.name, asClass(BarService));
-
-      const services = getConstructorServices(Foo, container);
-
-      expect(services.length).to.equal(0);
-    });
-  });
-
-  describe('fn: provideRouters', () => {
-    const { app, services } = buildApp([], [FooService, BarService]);
-
-    @Thresh()
-    class Router {}
-
-    it("should throw an error if shape isn't: [string, App][]", () => {
-      // @ts-ignore
-      expect(() => provideRouters(app, services, [[3, Router]])).to.throw(
-        Error,
-        ErrorTypes.RouterConfig
-      );
-    });
-
-    it('should add routers to the parent App', () => {
-      expect(() =>
-        provideRouters(app, services, [['/router', Router]])
-      ).to.not.throw(Error);
-    });
-  });
-
-  describe('fn: createRoutes', () => {
-    const { app } = buildApp([], [FooService, BarService]);
-
-    class Foo {
-      static $order = ['modId', 'addId'];
-
-      @Middleware('/:id')
-      addId(req: Request, res: Response, next: NextFunction) {
-        req.query.id = 'x' + req.query.id;
-        next();
-      }
-
-      @Route('/:id')
-      getId(req: Request, res: Response) {
-        res.send(req.query.id);
-      }
-
-      @Route('/:id/hello')
-      helloId(req: Request, res: Response) {
-        res.json({ hello: 'world', id: req.query.id });
-      }
-
-      @Param('id')
-      modId(req: Request, res: Response, next: NextFunction, id: string) {
-        req.query.id = '00' + id;
-        next();
-      }
-    }
-
-    it('should create routes according to $order', done => {
-      const foo = new Foo();
-      createRoutes(foo, app, Foo);
-      // @ts-ignore
-      const server = app.listen(3002);
-      chai
-        .request('http://localhost:3002')
-        .get('/hello')
-        .send()
-        .end((err, res) => {
-          expect(err).to.be.null;
-          expect(res).to.have.status(200);
-          expect(res.text).to.equal('x00hello');
-          server.close();
-          done();
-        });
+    it('should have args that match constructor', () => {
+      expect(router.expressService.args).to.eql([
+        router.expressService,
+        router.rootService,
+        router.fooService
+      ]);
     });
   });
 });

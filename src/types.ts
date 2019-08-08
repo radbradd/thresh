@@ -20,7 +20,7 @@ export type AppFunction = (
   id?: string
 ) => any;
 export type AppService = any;
-export type AppRouter = [string, { new (services: AwilixContainer): any }];
+export type AppRouter = [string, any];
 
 export type AppSettings = {
   routers?: Array<AppRouter>;

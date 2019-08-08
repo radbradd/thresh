@@ -70,8 +70,17 @@ new ThreshApplication();
 
 Services are created as singletons and are available and provided for in the decorator `@Thresh`. They are immediately available in the constructor of the class that provided them, as well as the constructor of all nested routers.
 
+The `ExpressService` and `RootService` are available to the root application and every nested router. `ExpressService` notably contains the `app` variable which is the Express Application/Router. `RootService` is the `ExpressService` for the root application.
+
 ```javascript
-import { Thresh, Route, Request, Response } from 'thresh';
+import {
+  Thresh,
+  Route,
+  Request,
+  Response,
+  ExpressService,
+  RootService
+} from 'thresh';
 
 class FooService {
   public foo: string = 'bar';
@@ -82,7 +91,14 @@ class FooService {
   express: [3000]
 })
 class ThreshApplication {
-  constructor(private fs: FooService) {}
+  constructor(
+    private fs: FooService,
+    private rs: RootService,
+    private es: ExpressService
+  ) {
+    console.log(this.rs === this.es); // true
+    this.es.app.use('/', myAwesomeMiddleware());
+  }
 
   @Route('/hello') // GET http://localhost:3000/hello
   helloWorld(req: Request, res: Response) {
@@ -374,5 +390,4 @@ new ThreshApplication();
 
 # Still in Development
 
-- App settings
 - Providing Services within Services
