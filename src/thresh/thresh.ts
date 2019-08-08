@@ -6,6 +6,7 @@ import {
   provideRouters,
   getConstructorServices
 } from './functions';
+import { ExpressService } from '../services/express.service';
 
 const defaultConfig: AppSettings = {
   routers: [],
@@ -17,7 +18,7 @@ const defaultConfig: AppSettings = {
  * been initialized
  */
 export interface onInit {
-  onInit(app: App, services: Injector): void;
+  onInit(): void;
 }
 
 /**
@@ -25,7 +26,7 @@ export interface onInit {
  * Middleware have been set up
  */
 export interface afterInit {
-  afterInit(app: App, services: Injector): void;
+  afterInit(): void;
 }
 
 /**
@@ -33,7 +34,7 @@ export interface afterInit {
  * run
  */
 export interface onStart {
-  onStart(app: App, services: Injector): void;
+  onStart(): void;
 }
 
 /**
@@ -41,7 +42,11 @@ export interface onStart {
  * been successfully started
  */
 export interface afterStart {
-  afterStart(app: App, services: Injector): void;
+  afterStart(): void;
+}
+
+export function startThresh<T>(Base: { new (): T }): T {
+  return new Base();
 }
 
 export function Thresh(config: AppSettings = defaultConfig) {
@@ -49,51 +54,43 @@ export function Thresh(config: AppSettings = defaultConfig) {
   return function _Thresh<T extends Constructor<{}>>(Base: T) {
     return class __Thresh extends Base {
       __app: App;
-      __services: Injector;
-      __server: any | null;
 
       constructor(...args: any[]) {
-        const { app, services } = buildApp(args, config.services!);
+        const service = new ExpressService(args, config.services!, __Thresh);
 
         // Inject services declared in the constructor
-        super(...getConstructorServices(__Thresh, services));
-        this.__app = app;
-        this.__services = services;
-        this.__server = null;
+        super(...service.args);
+        this.__app = service.app;
 
         // Fire off that constructor has been set up
-        this.__fireEvent('onInit', app, services);
+        this.__fireEvent('onInit');
 
-        // Add declared routes and middleware
-        createRoutes(this, app, Base);
+        // Add declared routes, middleware and params
+        service.routes = { klassInstance: this, Klass: Base };
 
         // Build Routers
-        provideRouters(app, services, config.routers!);
+        service.routers = config.routers!;
 
         // Fire off that App is built
-        this.__fireEvent('afterInit', app, services);
+        this.__fireEvent('afterInit');
 
         // Launch Express
-        if (config.express) {
+        if (!!config.express) {
           // Fire off that app is starting
-          this.__fireEvent('onStart', app, services);
-          const [port, cb] = config.express;
-          this.__server = (app as ExpressApplication).listen(port, () => {
+          this.__fireEvent('onStart');
+          const [port] = config.express;
+          service.listen(port).then(() => {
             // Fire off that app has started
-            this.__fireEvent('afterStart', app, services);
+            this.__fireEvent('afterStart');
           });
         }
       }
 
-      __fireEvent(event: string, app: App, services: Injector) {
+      __fireEvent(event: string) {
         try {
           // @ts-ignore
-          super[event](app, services);
+          super[event]();
         } catch {}
-      }
-
-      __close() {
-        this.__server!.close();
       }
     };
   };
